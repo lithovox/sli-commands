@@ -8,6 +8,7 @@ import pytest
 from conftest import BJERRUM, FIXTURES, KOPPEJAN, ROOT, SOILS_CSV, UNKNOWN_SOIL
 from settlement import cli
 from settlement.sli import SliFile
+from settlement.soils import read_soils
 
 
 def run(monkeypatch, *args) -> int:
@@ -213,6 +214,62 @@ def test_info_file_not_found(monkeypatch, capsys, tmp_path):
     ],
 )
 def test_invalid_arguments(monkeypatch, capsys, args, message):
+    with pytest.raises(SystemExit) as e:
+        run(monkeypatch, *args)
+    assert e.value.code == 2
+    assert message in capsys.readouterr().err
+
+
+def test_parameters_match_the_soils_file(monkeypatch, capsys, tmp_path):
+    # bjerrum.sli holds all values of the example soils file
+    assert run(monkeypatch, "-p", FIXTURES / BJERRUM) == 0
+    out = capsys.readouterr().out
+    assert out.splitlines()[0] == "code;yd;ys;cp;cap;cs;cas;rr;cr;calpha;pop;ocr;cv;k"
+    generated = tmp_path / "generated.csv"
+    generated.write_text(out)
+    assert read_soils(generated) == read_soils(SOILS_CSV)
+
+
+def test_parameters_can_be_used_as_soils_file(monkeypatch, capsys, tmp_path):
+    run(monkeypatch, "--parameters", FIXTURES / BJERRUM)
+    generated = tmp_path / "generated.csv"
+    generated.write_text(capsys.readouterr().out)
+
+    results = []
+    for soils in (generated, SOILS_CSV):
+        source = Path(shutil.copy(FIXTURES / KOPPEJAN, tmp_path / "calc.sli"))
+        assert run(monkeypatch, "-kj2bj", source, soils) == 0
+        results.append(source.with_name("calc.bj.sli").read_bytes())
+    assert results[0] == results[1]
+
+
+def test_parameters_values_as_written_in_the_file(monkeypatch, capsys):
+    run(monkeypatch, "-p", FIXTURES / KOPPEJAN)
+    assert "Clay, silty;14.50;14.50;5.00E+01;1.10E+01;" in capsys.readouterr().out
+
+
+def test_parameters_soil_name_with_separator(monkeypatch, capsys, tmp_path):
+    text = (FIXTURES / KOPPEJAN).read_bytes().replace(b"\r\nPeat A\r\n", b"\r\nPeat;A\r\n")
+    path = tmp_path / "separator.sli"
+    path.write_bytes(text)
+    assert run(monkeypatch, "-p", path) == 1
+    assert "soil name 'Peat;A' contains ';'" in capsys.readouterr().err
+
+
+def test_parameters_file_not_found(monkeypatch, capsys, tmp_path):
+    assert run(monkeypatch, "-p", tmp_path / "nope.sli") == 1
+    assert "file not found" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    "args, message",
+    [
+        (["-p", "a.sli", "b.sli"], "-p takes a single .sli file"),
+        (["-p", "a.sli", "-vt", "1"], "-vt can only be used with -i"),
+        (["-p", "a.sli", "-i", "b.sld"], "not allowed with argument"),
+    ],
+)
+def test_parameters_invalid_arguments(monkeypatch, capsys, args, message):
     with pytest.raises(SystemExit) as e:
         run(monkeypatch, *args)
     assert e.value.code == 2

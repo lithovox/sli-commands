@@ -15,7 +15,7 @@ from settlement.convert import (
 )
 from settlement.sld import SldError, read_time_settlement
 from settlement.sli import SliError, SliFile
-from settlement.soils import SoilsFileError, read_soils
+from settlement.soils import CODE_COLUMN, COLUMNS, SoilsFileError, read_soils
 
 Soils = dict[str, dict[str, float]]
 
@@ -86,6 +86,28 @@ def _info(sld: Path, vertical: int) -> int:
     return 0
 
 
+def _parameters(sli_path: Path) -> int:
+    """Prints the soils of a calculation in the format of the soils file."""
+    if not sli_path.is_file():
+        print(f"{PROG}: error: file not found: {sli_path}", file=sys.stderr)
+        return 1
+    try:
+        sli = SliFile.read(sli_path)
+        rows = []
+        for soil in sli.soils:
+            if ";" in soil.name:
+                raise SliError(f"soil name '{soil.name}' contains ';', the separator of the soils file")
+            rows.append(";".join([soil.name, *(sli.get_soil_value(soil, key) for key in COLUMNS.values())]))
+    except (SliError, OSError) as e:
+        print(f"{PROG}: error: {sli_path}: {e}", file=sys.stderr)
+        return 1
+
+    print(";".join([CODE_COLUMN, *COLUMNS]))
+    for row in rows:
+        print(row)
+    return 0
+
+
 def _convert(patterns: list[str], soilsfile: Path, action: str) -> int:
     convert, suffix, _ = ACTIONS[action]
 
@@ -122,7 +144,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         prog=PROG,
         description="Convert D-Settlement calculations (.sli) between NEN-Koppejan and NEN-Bjerrum, "
-        "or show the time-settlement curve of a vertical from the results (.sld).",
+        "show the soil parameters of a calculation, or the time-settlement curve of a vertical (.sld).",
         # otherwise -kj2bj could be read as an abbreviation
         allow_abbrev=False,
     )
@@ -132,6 +154,13 @@ def main() -> int:
         actions.add_argument(f"-{name}", f"--{name}", dest="action", action="store_const", const=name, help=help)
     actions.add_argument(
         "-i", "--info", type=Path, metavar="SLD", help="show time and settlement of a vertical from a .sld file"
+    )
+    actions.add_argument(
+        "-p",
+        "--parameters",
+        type=Path,
+        metavar="SLI",
+        help="show the soil parameters of a .sli file in the format of the soils file",
     )
     parser.add_argument(
         "-vt", "--vertical", type=int, help="vertical number for -i, the first vertical is 1 (default 1)"
@@ -152,6 +181,12 @@ def main() -> int:
 
     if args.vertical is not None:
         parser.error("-vt can only be used with -i")
+
+    if args.parameters:
+        if args.files:
+            parser.error("-p takes a single .sli file")
+        return _parameters(args.parameters)
+
     if len(args.files) < 2:
         parser.error(f"-{args.action} needs one or more calculation files followed by a soils file")
     return _convert(args.files[:-1], Path(args.files[-1]), args.action)

@@ -11,8 +11,7 @@ BJERRUM = "NEN - Bjerrum"
 
 # option values and their index as used in the [MODEL] section
 MODELS = {KOPPEJAN: 0, BJERRUM: 1}
-DARCY, TERZAGHI = "Darcy", "Terzaghi"
-CALCULATION_TYPES = {DARCY: 0, TERZAGHI: 1}
+TERZAGHI = "Terzaghi"
 LINEAR, NATURAL = "Linear", "Natural"
 STRAIN_TYPES = {LINEAR: 0, NATURAL: 1}
 
@@ -92,9 +91,8 @@ def koppejan_to_bjerrum(sli: SliFile, soils: dict[str, dict[str, float]]) -> lis
 
     notices = []
     sli.set_model_option("Model", MODELS[BJERRUM], BJERRUM)
-    if sli.get_model_option("Calculation type") != DARCY:
-        sli.set_model_option("Calculation type", CALCULATION_TYPES[DARCY], DARCY)
-        notices.append("calculation type changed from Terzaghi to Darcy (required for NEN-Bjerrum)")
+    if sli.get_model_option("Calculation type") == TERZAGHI:
+        notices.append("the calculation uses Terzaghi, Darcy is preferred")
     if sli.get_model_option("Strain type") != LINEAR:
         sli.set_model_option("Strain type", STRAIN_TYPES[LINEAR], LINEAR)
         notices.append("strain type changed from Natural to Linear (required for NEN-Bjerrum)")

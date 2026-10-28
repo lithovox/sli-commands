@@ -61,9 +61,14 @@ def test_koppejan_to_bjerrum_matches_reference(soils):
     notices = koppejan_to_bjerrum(sli, soils)
     reference = SliFile.read(FIXTURES / BJERRUM)
 
-    for option in ("Model", "Calculation type", "Strain type"):
+    for option in ("Model", "Strain type"):
         assert sli.get_model_option(option) == reference.get_model_option(option)
-    assert len(notices) == 2
+    # the consolidation model is kept, the reference happens to use Darcy
+    assert sli.get_model_option("Calculation type") == "Terzaghi"
+    assert notices == [
+        "the calculation uses Terzaghi, Darcy is preferred",
+        "strain type changed from Natural to Linear (required for NEN-Bjerrum)",
+    ]
 
     keys = [*COLUMNS.values(), "SoilEquivalentAge"]
     assert soil_values(sli, keys) == soil_values(reference, keys)
@@ -90,6 +95,7 @@ def test_koppejan_to_bjerrum_with_darcy_and_linear_has_no_notices(soils):
     sli.set_model_option("Calculation type", 0, "Darcy")
     sli.set_model_option("Strain type", 0, "Linear")
     assert koppejan_to_bjerrum(sli, soils) == []
+    assert sli.get_model_option("Calculation type") == "Darcy"
 
 
 def test_bjerrum_to_koppejan(soils):
