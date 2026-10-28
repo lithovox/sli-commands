@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: deploy-sli
     env:
-      HOST: deploy@167.235.135.169
+      HOST: deploy@46.224.107.127
       APP: /var/www/apps/sli
     steps:
       - uses: actions/download-artifact@v4

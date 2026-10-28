@@ -1,6 +1,6 @@
 # Caddy config of the published site, /etc/caddy/apps/sli.caddy on the server.
 # The headers must match web/security-headers.ts, a unit test checks this.
-# The deploy job in .github/workflows/build.yml uploads to releases/ and points current at it.
+# The site is served from releases/<release>, with current pointing at the live one.
 
 sli.lithovox.nl {
 	root * /var/www/apps/sli/current
