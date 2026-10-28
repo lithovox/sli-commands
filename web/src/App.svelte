@@ -62,7 +62,7 @@
 <div class="app">
   <header class="topbar">
     <div class="brand">
-      <a class="brand-link" href="https://github.com/lithovox/sli-commands" target="_blank" rel="noopener noreferrer">
+      <a class="brand-link" href="https://lithovox.nl" target="_blank" rel="noopener noreferrer">
         <img class="brand-logo" src="./logo.png" alt="LithoVox" />
         <span class="brand-title"><span>Litho</span><span class="brand-vox">Vox</span></span>
       </a>
