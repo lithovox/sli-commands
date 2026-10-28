@@ -24,6 +24,68 @@ jobs:
       - run: uv sync --locked
       - run: uv run pytest
 
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      # the browser tests build the site in web/dist and run against that build
+      - run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: web/dist/
+
+  # every push to master publishes the site on https://sli.lithovox.nl
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [test, web]
+    runs-on: ubuntu-latest
+    concurrency: deploy-sli
+    env:
+      HOST: deploy@167.235.135.169
+      APP: /var/www/apps/sli
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web
+          path: dist
+
+      - name: Set up SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      # upload to a new release folder and switch the symlink in one move, so
+      # visitors never see a half-uploaded site; keeps the 5 most recent releases
+      - name: Upload and switch release
+        run: |
+          release="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
+          rsync -az --delete dist/ "$HOST:$APP/releases/$release/"
+          ssh "$HOST" "set -e
+            ln -sfn $APP/releases/$release $APP/current.tmp
+            mv -T $APP/current.tmp $APP/current
+            cd $APP/releases && ls -1 | sort | head -n -5 | xargs -r rm -rf"
+
+      - name: Check the site
+        run: curl -fsS https://sli.lithovox.nl/ | grep -q "<html"
+
   build:
     needs: test
     strategy:

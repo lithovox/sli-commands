@@ -3,7 +3,7 @@ import re
 import pytest
 
 from conftest import FIXTURES
-from settlement.sld import SldError, read_time_settlement
+from settlement.sld import SldError, read_time_settlement, verticals
 
 # the synthetic fixtures hold the same invented curves for Terzaghi and Darcy
 CURVES = {
@@ -67,3 +67,7 @@ def test_vertical_without_time_dependent_data(tmp_path):
     path.write_text("[Vertical]\n      1     =  Vertical count\n[End of Vertical]\n")
     with pytest.raises(SldError, match="no time-dependent data found for vertical 1"):
         read_time_settlement(path, 1)
+
+
+def test_verticals():
+    assert verticals((FIXTURES / "terzaghi.sld").read_bytes()) == [(1, 5.0, 0.0), (2, 15.0, 0.0)]

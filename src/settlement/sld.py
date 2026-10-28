@@ -52,24 +52,44 @@ def _settlement_column(lines: list[str], index: int) -> int:
         raise SldError("no Settlement column found for the time-dependent data") from None
 
 
+def _lines(data: bytes) -> list[str]:
+    return data.decode("latin-1").replace("\r\n", "\n").split("\n")
+
+
+def verticals(data: bytes) -> list[tuple[int, float, float]]:
+    """(number, X co-ordinate, Z co-ordinate) of each vertical in the contents of a .sld file."""
+
+    def coordinate(lines: list[str], name: str) -> float:
+        return next((float(line.split("=")[0]) for line in lines if line.strip().endswith(name)), 0.0)
+
+    return [
+        (number, coordinate(lines, "X co-ordinate"), coordinate(lines, "Z co-ordinate"))
+        for number, lines in sorted(_verticals(_lines(data)).items())
+    ]
+
+
 def read_time_settlement(path: Path, vertical: int) -> list[tuple[float, float]]:
     """Returns (time [days], settlement [m]) for each calculation time of a vertical."""
-    lines = path.read_text(encoding="latin-1").replace("\r\n", "\n").split("\n")
-    verticals = _verticals(lines)
+    return time_settlement(path.read_bytes(), vertical)
+
+
+def time_settlement(data: bytes, vertical: int) -> list[tuple[float, float]]:
+    """Like read_time_settlement, for the contents of a .sld file."""
+    verticals = _verticals(_lines(data))
     if vertical not in verticals:
         available = ", ".join(str(v) for v in sorted(verticals)) or "none"
         raise SldError(f"vertical {vertical} not found, available vertical(s): {available}")
 
-    data = verticals[vertical]
-    starts = [i for i, line in enumerate(data) if line == "[Vertical Data at Time]"]
+    lines = verticals[vertical]
+    starts = [i for i, line in enumerate(lines) if line == "[Vertical Data at Time]"]
     if not starts:
         raise SldError(f"no time-dependent data found for vertical {vertical}")
-    column = _settlement_column(data, starts[0])
+    column = _settlement_column(lines, starts[0])
 
     result = []
     for i in starts:
         # "   0.100000000000    =  Time in days", followed by one row per depth, top first
-        time = float(data[i + 1].split("=")[0])
-        settlement = float(data[i + 2].split()[column])
+        time = float(lines[i + 1].split("=")[0])
+        settlement = float(lines[i + 2].split()[column])
         result.append((time, settlement))
     return result

@@ -15,7 +15,7 @@ from settlement.convert import (
 )
 from settlement.sld import SldError, read_time_settlement
 from settlement.sli import SliError, SliFile
-from settlement.soils import CODE_COLUMN, COLUMNS, SoilsFileError, read_soils
+from settlement.soils import SoilsFileError, read_soils, soil_parameters
 
 Soils = dict[str, dict[str, float]]
 
@@ -92,19 +92,13 @@ def _parameters(sli_path: Path) -> int:
         print(f"{PROG}: error: file not found: {sli_path}", file=sys.stderr)
         return 1
     try:
-        sli = SliFile.read(sli_path)
-        rows = []
-        for soil in sli.soils:
-            if ";" in soil.name:
-                raise SliError(f"soil name '{soil.name}' contains ';', the separator of the soils file")
-            rows.append(";".join([soil.name, *(sli.get_soil_value(soil, key) for key in COLUMNS.values())]))
+        rows = soil_parameters(SliFile.read(sli_path))
     except (SliError, OSError) as e:
         print(f"{PROG}: error: {sli_path}: {e}", file=sys.stderr)
         return 1
 
-    print(";".join([CODE_COLUMN, *COLUMNS]))
     for row in rows:
-        print(row)
+        print(";".join(row))
     return 0
 
 

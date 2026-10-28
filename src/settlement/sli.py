@@ -28,11 +28,17 @@ class SliFile:
 
     @classmethod
     def read(cls, path: Path) -> "SliFile":
-        text = path.read_text(encoding="latin-1")
-        return cls(text.replace("\r\n", "\n").split("\n"))
+        return cls.from_bytes(path.read_bytes())
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "SliFile":
+        return cls(data.decode("latin-1").replace("\r\n", "\n").split("\n"))
 
     def write(self, path: Path) -> None:
-        path.write_text(NEWLINE.join(self.lines), encoding="latin-1", newline="")
+        path.write_bytes(self.to_bytes())
+
+    def to_bytes(self) -> bytes:
+        return NEWLINE.join(self.lines).encode("latin-1")
 
     def _section(self, name: str) -> range:
         """Line indices between [name] and [END OF name], exclusive."""
