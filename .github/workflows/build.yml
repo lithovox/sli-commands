@@ -43,28 +43,27 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --locked --group build
 
-      - name: Build executables
+      - name: Build executable
         run: |
-          for tool in kj2bj bj2kj; do
-            # the package metadata holds the version shown by --version
-            uv run --group build pyinstaller --onefile --copy-metadata settlement --name "$tool" "packaging/$tool.py"
-          done
+          # the package metadata holds the version shown by --version
+          uv run --group build pyinstaller --onefile --copy-metadata settlement --name slicmd packaging/slicmd.py
 
       - name: Smoke test
         run: |
           mkdir smoke
           cp tests/fixtures/koppejan.sli smoke/calculation.sli
-          dist/kj2bj${{ matrix.exe }} smoke/calculation.sli examples/soils.csv
-          dist/bj2kj${{ matrix.exe }} smoke/calculation.bj.sli examples/soils.csv
+          dist/slicmd${{ matrix.exe }} -kj2bj smoke/calculation.sli examples/soils.csv
+          dist/slicmd${{ matrix.exe }} -bj2kj smoke/calculation.bj.sli examples/soils.csv
           test -f smoke/calculation.kj.sli
-          test "$(dist/kj2bj${{ matrix.exe }} --version | tr -d '\r')" = "kj2bj $(uv version --short)"
+          dist/slicmd${{ matrix.exe }} -i tests/fixtures/terzaghi.sld -vt 2 | grep -q "0.2500000"
+          test "$(dist/slicmd${{ matrix.exe }} -v | tr -d '\r')" = "slicmd $(uv version --short)"
 
       # fixed names, the download links in README.md depend on them
       - name: Package
         run: |
-          name="kj2bj-bj2kj-${{ matrix.platform }}"
+          name="slicmd-${{ matrix.platform }}"
           mkdir "$name"
-          cp dist/kj2bj${{ matrix.exe }} dist/bj2kj${{ matrix.exe }} examples/soils.csv "$name/"
+          cp dist/slicmd${{ matrix.exe }} examples/soils.csv "$name/"
           if [ "$RUNNER_OS" = "Windows" ]; then
             7z a "$name.zip" "$name"
           else

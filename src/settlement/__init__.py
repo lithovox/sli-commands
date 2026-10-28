@@ -5,7 +5,3 @@ try:
     __version__ = version("settlement")
 except PackageNotFoundError:
     __version__ = "unknown"
-
-
-def main() -> None:
-    print("Hello from settlement!")

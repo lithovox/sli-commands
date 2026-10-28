@@ -18,6 +18,7 @@ assets/
 
 # D-Settlement output, plot settings and converted files
 *.sld
+!tests/fixtures/*.sld
 *.sls
 *.log
 *.bj.sli
