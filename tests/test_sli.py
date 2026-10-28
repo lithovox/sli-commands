@@ -70,8 +70,9 @@ def test_unknown_model_option_raises():
 
 def test_set_filename():
     sli = SliFile.read(FIXTURES / KOPPEJAN)
-    sli.set_filename(Path("/some/dir/out.bj.sli"))
-    assert "FILENAME   : /some/dir/out.bj.sli" in sli.lines
+    path = Path("some", "dir", "out.bj.sli").absolute()
+    sli.set_filename(path)
+    assert f"FILENAME   : {path}" in sli.lines
 
 
 def test_missing_soil_collection_raises():

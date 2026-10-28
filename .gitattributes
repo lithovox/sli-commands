@@ -1,0 +1,2 @@
+# D-Settlement files use CRLF, the tests need them byte for byte
+*.sli -text

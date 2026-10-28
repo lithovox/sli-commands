@@ -4,6 +4,10 @@ Convert D-Settlement calculations (`.sli`) between the NEN-Koppejan and NEN-Bjer
 
 [English](#english) | [Nederlands](#nederlands)
 
+> **Note:** versions before v1.0 are not fully tested and may not be reliable. Always check the converted calculation.
+>
+> **Let op:** versies vóór v1.0 zijn niet volledig getest en mogelijk niet betrouwbaar. Controleer de omgezette berekening altijd.
+
 ## English
 
 ### Usage
@@ -31,9 +35,14 @@ A `;` separated file with one row per soil. See the example with dummy values in
 | `cv` | consolidation coefficient [m²/s] |
 | `k` | vertical permeability [m/day] |
 
-### Installation
+### Download
 
-Download the zip (Windows) or tar.gz (Linux) from the GitHub releases and put `kj2bj` and `bj2kj` in a folder on your PATH.
+Latest build from master:
+
+- [Windows (zip)](https://github.com/lithovox/sli-commands/releases/download/latest/kj2bj-bj2kj-windows-x86_64.zip)
+- [Linux (tar.gz)](https://github.com/lithovox/sli-commands/releases/download/latest/kj2bj-bj2kj-linux-x86_64.tar.gz)
+
+Unpack it and put `kj2bj` and `bj2kj` in a folder on your PATH. Versioned releases are on the [releases page](https://github.com/lithovox/sli-commands/releases).
 
 ### Development
 
@@ -74,9 +83,14 @@ Een bestand gescheiden door `;` met één regel per grondsoort. Zie het voorbeel
 | `cv` | consolidatiecoëfficiënt [m²/s] |
 | `k` | verticale doorlatendheid [m/dag] |
 
-### Installatie
+### Download
 
-Download de zip (Windows) of tar.gz (Linux) van de GitHub releases en zet `kj2bj` en `bj2kj` in een map die in je PATH staat.
+Laatste versie van master:
+
+- [Windows (zip)](https://github.com/lithovox/sli-commands/releases/download/latest/kj2bj-bj2kj-windows-x86_64.zip)
+- [Linux (tar.gz)](https://github.com/lithovox/sli-commands/releases/download/latest/kj2bj-bj2kj-linux-x86_64.tar.gz)
+
+Pak het bestand uit en zet `kj2bj` en `bj2kj` in een map die in je PATH staat. Releases met een versienummer staan op de [releasepagina](https://github.com/lithovox/sli-commands/releases).
 
 ### Ontwikkeling
 
