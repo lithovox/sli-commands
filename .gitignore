@@ -8,5 +8,17 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Original calculations and soil parameters, these may not be published
 data/
 assets/
+
+# PyInstaller
+*.spec
+
+# D-Settlement output, plot settings and converted files
+*.sld
+*.sls
+*.log
+*.bj.sli
+*.kj.sli

@@ -5,6 +5,7 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
+from settlement import __version__
 from settlement.convert import (
     ConversionError,
     bjerrum_to_koppejan,
@@ -22,6 +23,7 @@ def _run(
     suffix: str,
 ) -> int:
     parser = argparse.ArgumentParser(prog=prog, description=description)
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("calculationfile", type=Path, help="D-Settlement input file (.sli)")
     parser.add_argument("soilsfile", type=Path, help="soil parameters (.csv, ';' separated)")
     args = parser.parse_args()
